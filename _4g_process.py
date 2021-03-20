@@ -120,16 +120,16 @@ def _4gProcess():
 	TYPE_SEND = 2
 	diggerId = 566609996553388032
 	com_4g = SerialPortCommunication(COM_ID_4G, 115200, 0.1)
+	# 上报消息socket
+	sk_send = socket.socket()
+	sk_send.bind(("127.0.0.1", 14612))
+	sk_send.listen()
+	conn_send, addr_send = sk_send.accept()
+	sk_send.setblocking(False)
 
 	# 接收任务socket
 	sk_recv_tsk = socket.socket()
 	sk_recv_tsk.connect(("127.0.0.1", 9000))
-	# 上报消息socket
-	sk_send = socket.socket()
-	sk_send.bind(("127.0.0.1", 9999))
-	sk_send.listen()
-	conn_send, addr_send = sk_send.accept()
-	sk_send.setblocking(False)
 
 	_4g_recv_thread = threading.Thread(target=_4RecFunc, daemon=True).start()
 	_4g_send_thread = threading.Thread(target=_4SendFunc, daemon=True).start()

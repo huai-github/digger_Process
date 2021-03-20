@@ -11,7 +11,7 @@ from globalvar import my_lock
 from globalvar import *
 
 
-def sensorProcess(sensor_q):
+def sensorProcess(sensor_q, led_q):
 	gl.gl_init()
 
 	gps_thread = threading.Thread(target=sensor_thread.gpsThreadFunc, daemon=True)
@@ -96,7 +96,36 @@ def sensorProcess(sensor_q):
 			"roll_2_da_bi": roll_2_da_bi,
 			"roll_2_xiao_bi": roll_2_xiao_bi,
 		}
+
+		my_lock.gpsStableLedLock.acquire()
+		gps_stable_flag = gl.get_value("gps_stable_flag")
+		my_lock.gpsStableLedLock.release()
+
+		my_lock.gpsLedLock.acquire()
+		gps_is_open_led = gl.get_value("gps_is_open_led")
+		my_lock.gpsLedLock.release()
+
+		my_lock.laserLedLock.acquire()
+		laserLed = gl.get_value("laserLed")
+		my_lock.laserLedLock.release()
+
+		my_lock.gyroLedLock.acquire()
+		gyroLedChassis = gl.get_value("gyroLedChassis")
+		gyroBigLed = gl.get_value("gyroBigLed")
+		gyroLittleLed = gl.get_value("gyroLittleLed")
+		my_lock.gyroLedLock.release()
+
+		led_dict = {
+			"gps_stable_flag": gps_stable_flag,
+			"gps_is_open_led": gps_is_open_led,
+			"laserLed": laserLed,
+			"gyroLedChassis": gyroLedChassis,
+			"gyroBigLed": gyroBigLed,
+			"gyroLittleLed": gyroLittleLed,
+		}
+
 		sensor_q.put(sensor_data_dict)
+		led_q.put(led_dict)
 
 		time.sleep(0.1)
 

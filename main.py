@@ -73,26 +73,22 @@ class MyWindows(QWidget, digger_ui.Ui_Digger):
 		deep = gl.get_value("deep")
 		my_lock.pMain_win_main_lock.release()
 
-		my_lock.gpsStableLedLock.acquire()
-		gps_stable_flag = gl.get_value("gps_stable_flag")  # gpsUI
-		my_lock.gpsStableLedLock.release()
+		led_dict = led_q.get()
+		if led_dict:
+			gps_stable_flag = led_dict["gps_stable_flag"]
+			gps_is_open_led = led_dict["gps_is_open_led"]
+			laserLed = led_dict["laserLed"]
+			gyroLedChassis = led_dict["gyroLedChassis"]
+			gyroBigLed = led_dict["gyroBigLed"]
+			gyroLittleLed = led_dict["gyroLittleLed"]
+		else:
+			gps_stable_flag = False
+			gps_is_open_led = False
+			laserLed = False
+			gyroLedChassis = False
+			gyroBigLed = False
+			gyroLittleLed = False
 
-		my_lock.gpsLedLock.acquire()
-		gps_is_open_led = gl.get_value("gps_is_open_led")  # gps串口是否打开
-		my_lock.gpsLedLock.release()
-
-		my_lock.laserLedLock.acquire()
-		laserLed = gl.get_value("laserLed")  # laserUI
-		my_lock.laserLedLock.release()
-
-		my_lock.gyroLedLock.acquire()
-		gyroLedChassis = gl.get_value("gyroLedChassis")  # 485UI
-		gyroBigLed = gl.get_value("gyroBigLed")  # 485UI
-		gyroLittleLed = gl.get_value("gyroLittleLed")  # 485UI
-		my_lock.gyroLedLock.release()
-
-		qp = QPainter()
-		qp.begin(self)
 		"""GPS信号指示灯"""
 		if gps_stable_flag:
 			self.gps_led.setStyleSheet(
@@ -165,15 +161,11 @@ class MyWindows(QWidget, digger_ui.Ui_Digger):
 			self.rightLabel.setPixmap(pixmapL)
 			self.rightLabel.setScaledContents(True)
 
-		# """显示挖掘机ID"""
-		# self.diggerID.setText(str(digger_id))
-
 		"""显示时间"""
 		date = QDateTime.currentDateTime()
 		current_time = date.toString("yyyy-MM-dd hh:mm dddd")
 		self.time.setText(current_time)
 
-		qp.end()
 		# 刷新
 		self.setUpdatesEnabled(True)
 		self.update()
@@ -197,8 +189,9 @@ def _4gUpdateThreadFunc():
 
 
 def _4gSendThreadFunc():
+	time.sleep(1)
 	sk_send = socket.socket()
-	sk_send.connect(("127.0.0.1", 9999))
+	sk_send.connect(("127.0.0.1", 14612))
 
 	# 上报x,y,h,w--来自计算线程,维护线程
 	my_lock.pMain_calc_4gSend_lock.acquire()
@@ -255,7 +248,8 @@ def sensorUpdateThreadFunc():
 if __name__ == '__main__':
 	gl.gl_init()
 	sensor_q = Queue()
-	sensor_p = Process(target=sensorProcess, args=(sensor_q, )).start()
+	led_q = Queue()
+	sensor_p = Process(target=sensorProcess, args=(sensor_q, led_q,)).start()
 	_4g_p = Process(target=_4gProcess).start()
 
 	calculate_thread = threading.Thread(target=calculate_main.calcThreadFunc, daemon=True).start()

@@ -7,6 +7,7 @@
 # 时间	   	: 2021-01-19 11:31
 # ***************************************************************
 import logging
+import os
 
 
 def setup_logger(filepath):
@@ -14,25 +15,26 @@ def setup_logger(filepath):
     # 当前时间 模块的文件名
     file_formatter = logging.Formatter(
         # "[%(asctime)s %(filename)s %(funcName)s %(lineno)s] %(levelname)-6s %(message)s",
-        "[%(filename)s %(funcName)s %(lineno)s] %(levelname)-6s %(message)s",
-        datefmt='%Y-%m-%d %H:%M:%S',
+        # "[%(filename)s %(funcName)s %(lineno)s] %(levelname)-6s %(message)s",
+        # datefmt='%Y-%m-%d %H:%M:%S',
+        "[%(asctime)s %(message)s]",
     )
     logger = logging.getLogger('example')
     handler = logging.StreamHandler()   # 输出到显示器
     handler.setFormatter(file_formatter)
     logger.addHandler(handler)
 
-    # file_handle_name = "file"
-    # if file_handle_name in [h.name for h in logger.handlers]:
-    #     return
-    # if os.path.dirname(filepath) is not '':
-    #     if not os.path.isdir(os.path.dirname(filepath)):
-    #         os.makedirs(os.path.dirname(filepath))
-    # # 日志文件
-    # file_handle = logging.FileHandler(filename=filepath, mode="a")
-    # file_handle.set_name(file_handle_name)
-    # file_handle.setFormatter(file_formatter)
-    # logger.addHandler(file_handle)
+    file_handle_name = "file"
+    if file_handle_name in [h.name for h in logger.handlers]:
+        return
+    if os.path.dirname(filepath) is not '':
+        if not os.path.isdir(os.path.dirname(filepath)):
+            os.makedirs(os.path.dirname(filepath))
+    # 日志文件
+    file_handle = logging.FileHandler(filename=filepath, mode="a")
+    file_handle.set_name(file_handle_name)
+    file_handle.setFormatter(file_formatter)
+    logger.addHandler(file_handle)
     
     logger.setLevel(logging.FATAL)
     # logger.setLevel(logging.ERROR)
